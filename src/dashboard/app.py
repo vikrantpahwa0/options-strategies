@@ -16,11 +16,9 @@ from src.simulation.monte_carlo import run_monte_carlo
 from src.dashboard.charts import payoff_figure, pnl_path_figure, spot_path_figure
 
 
-
-
 st.set_page_config(page_title="Butterfly & Condor Lab", layout="wide")
 st.title("Butterfly & Condor Lab")
-st.caption("Paper-trading simulator — Black-Scholes pricing + Greeks + automatic exits")
+st.caption("Paper-trading simulator - Black-Scholes pricing + Greeks + automatic exits")
 
 
 # ----- Sidebar -----
@@ -117,20 +115,20 @@ def render_leg_table(strategy, entry_prices, current_prices, lot_size):
             "Leg": f"{leg.side.upper()} {leg.kind.upper()} {leg.strike}",
             "Qty": leg.qty,
             "Entry (per unit)": round(entry, 2),
-            "Entry (₹)": round(entry_cash, 2),
+            "Entry (Rs)": round(entry_cash, 2),
             "Current (per unit)": round(current, 2),
-            "Current (₹)": round(current_cash, 2),
-            "Leg PnL (₹)": round(leg_pnl, 2),
+            "Current (Rs)": round(current_cash, 2),
+            "Leg PnL (Rs)": round(leg_pnl, 2),
         })
 
     rows.append({
         "Leg": "NET / TOTAL",
         "Qty": "",
         "Entry (per unit)": "",
-        "Entry (₹)": round(net_entry, 2),
+        "Entry (Rs)": round(net_entry, 2),
         "Current (per unit)": "",
-        "Current (₹)": round(net_current, 2),
-        "Leg PnL (₹)": round(net_entry - net_current, 2),
+        "Current (Rs)": round(net_current, 2),
+        "Leg PnL (Rs)": round(net_entry - net_current, 2),
     })
     return rows
 
@@ -150,16 +148,16 @@ with tab_payoff:
     metrics = compute_position_metrics(strategy, spot, iv, dte, lot_size)
     st.subheader(f"Position summary ({instrument}, lot={lot_size})")
     s1, s2, s3, s4 = st.columns(4)
-    s1.metric("Net premium (₹)", f"₹{metrics['net_premium']:,.2f}")
-    s2.metric("Max profit (₹)", f"₹{metrics['max_profit']:,.2f}")
-    s3.metric("Max loss (₹)", f"₹{metrics['max_loss']:,.2f}")
+    s1.metric("Net premium (Rs)", f"Rs {metrics['net_premium']:,.2f}")
+    s2.metric("Max profit (Rs)", f"Rs {metrics['max_profit']:,.2f}")
+    s3.metric("Max loss (Rs)", f"Rs {metrics['max_loss']:,.2f}")
     s4.metric("Breakevens",
-              " / ".join(f"{b:,.0f}" for b in metrics["breakevens"]) or "—")
+              " / ".join(f"{b:,.0f}" for b in metrics["breakevens"]) or "None")
 
     broker = PaperBroker(risk_free_rate=0.06, lot_size=lot_size)
     position = broker.enter(strategy, spot, iv, dte)
 
-    st.subheader("Strategy legs — at entry")
+    st.subheader("Strategy legs - at entry")
     rows = render_leg_table(strategy, position.entry_leg_prices,
                             position.entry_leg_prices, lot_size)
     st.dataframe(rows, use_container_width=True, hide_index=True)
@@ -181,16 +179,16 @@ with tab_payoff:
     sl_value = min(sl_pct * premium_scaled, premium_scaled)
 
     e1, e2, e3 = st.columns(3)
-    e1.metric("Profit target", f"₹{tp_value:,.2f}",
-              help=f"{tp_pct*100:.0f}% of ₹{tp_base:,.2f} ({tp_mode})")
-    e2.metric("Stop-loss", f"−₹{sl_value:,.2f}",
-              help=f"{sl_pct:.2f}× of premium, capped at max loss")
-    e3.metric("Time exit", "DTE ≤ 1")
+    e1.metric("Profit target", f"Rs {tp_value:,.2f}",
+              help=f"{tp_pct*100:.0f}% of Rs {tp_base:,.2f} ({tp_mode})")
+    e2.metric("Stop-loss", f"-Rs {sl_value:,.2f}",
+              help=f"{sl_pct:.2f}x of premium, capped at max loss")
+    e3.metric("Time exit", "DTE <= 1")
 
     if sl_pct * premium_scaled > premium_scaled:
         st.warning(
-            f"Stop-loss of {sl_pct:.2f}× exceeds max loss "
-            f"(₹{premium_scaled:,.2f}). It has been capped."
+            f"Stop-loss of {sl_pct:.2f}x exceeds max loss "
+            f"(Rs {premium_scaled:,.2f}). It has been capped."
         )
 
 
@@ -198,7 +196,7 @@ with tab_payoff:
 with tab_live:
     st.write("Click **Run Simulation** in the sidebar.")
 
-    # ---- Single animated run ----
+    # Single animated run
     if run_button:
         strategy = build_strategy()
         metrics = compute_position_metrics(strategy, spot, iv, dte, lot_size)
@@ -219,7 +217,7 @@ with tab_live:
         tp_value = tp_pct * tp_base
         sl_value = min(sl_pct * premium_scaled, premium_scaled)
 
-        st.subheader(f"Live playback — {instrument} (lot={lot_size})")
+        st.subheader(f"Live playback - {instrument} (lot={lot_size})")
         metrics_placeholder = st.empty()
         thresholds_placeholder = st.empty()
         legs_placeholder = st.empty()
@@ -232,8 +230,8 @@ with tab_live:
                 m1, m2, m3, m4, m5 = st.columns(5)
                 m1.metric("Spot", f"{frame.spot:,.2f}",
                           delta=f"{frame.spot - prev.spot:+,.2f}")
-                m2.metric("PnL (₹)", f"₹{frame.pnl:,.2f}",
-                          delta=f"₹{frame.pnl - prev.pnl:+,.2f}")
+                m2.metric("PnL (Rs)", f"Rs {frame.pnl:,.2f}",
+                          delta=f"Rs {frame.pnl - prev.pnl:+,.2f}")
                 m3.metric("Delta", f"{frame.delta:.4f}")
                 m4.metric("Theta", f"{frame.theta:.4f}")
                 m5.metric("Step", f"{frame.step}/{steps}")
@@ -243,11 +241,11 @@ with tab_live:
                 tp_progress = max(0, min(100, (pnl / tp_value) * 100)) if tp_value > 0 else 0
                 sl_buffer = -sl_value - pnl
                 t1, t2, t3 = st.columns(3)
-                t1.metric("Profit target", f"₹{tp_value:,.2f}",
+                t1.metric("Profit target", f"Rs {tp_value:,.2f}",
                           delta=f"{tp_progress:.0f}% reached")
-                t2.metric("Stop-loss", f"−₹{sl_value:,.2f}",
-                          delta=f"₹{abs(sl_buffer):,.2f} buffer" if sl_buffer < 0 else "breached")
-                t3.metric("Max loss", f"−₹{abs(metrics['max_loss']):,.2f}")
+                t2.metric("Stop-loss", f"-Rs {sl_value:,.2f}",
+                          delta=f"Rs {abs(sl_buffer):,.2f} buffer" if sl_buffer < 0 else "breached")
+                t3.metric("Max loss", f"-Rs {abs(metrics['max_loss']):,.2f}")
 
             with legs_placeholder.container():
                 rows = render_leg_table(
@@ -270,18 +268,18 @@ with tab_live:
 
         steps_used = len(history) - 1
         if final_position.status == "CLOSED_TP":
-            st.success(f"**CLOSED_TP** — Target: ₹{tp_value:,.2f} | "
-                       f"Final: ₹{final_position.pnl:,.2f} | Steps: {steps_used}/{steps}")
+            st.success(f"**CLOSED_TP** - Target: Rs {tp_value:,.2f} | "
+                       f"Final: Rs {final_position.pnl:,.2f} | Steps: {steps_used}/{steps}")
         elif final_position.status == "CLOSED_SL":
             slippage = abs(final_position.pnl) - sl_value
-            st.error(f"**CLOSED_SL** — Threshold: −₹{sl_value:,.2f} | "
-                     f"Filled: ₹{final_position.pnl:,.2f} | "
-                     f"Slippage: ₹{max(slippage, 0):,.2f} | Steps: {steps_used}/{steps}")
+            st.error(f"**CLOSED_SL** - Threshold: -Rs {sl_value:,.2f} | "
+                     f"Filled: Rs {final_position.pnl:,.2f} | "
+                     f"Slippage: Rs {max(slippage, 0):,.2f} | Steps: {steps_used}/{steps}")
         elif final_position.status == "CLOSED_TIME":
-            st.warning(f"**CLOSED_TIME** — Final: ₹{final_position.pnl:,.2f} | "
+            st.warning(f"**CLOSED_TIME** - Final: Rs {final_position.pnl:,.2f} | "
                        f"Steps: {steps_used}/{steps}")
         else:
-            st.info(f"Status: {final_position.status} | PnL: ₹{final_position.pnl:,.2f}")
+            st.info(f"Status: {final_position.status} | PnL: Rs {final_position.pnl:,.2f}")
 
         col_a, col_b = st.columns(2)
         with col_a:
@@ -289,7 +287,7 @@ with tab_live:
         with col_b:
             st.plotly_chart(spot_path_figure(history), use_container_width=True)
 
-    # ---- Animate N, then stream remaining runs into a live-updating table ----
+    # Animate N, then stream remaining runs into a live-updating table
     st.divider()
     st.subheader("Animate + Stream")
 
@@ -307,8 +305,8 @@ with tab_live:
         tp_value = tp_pct * tp_base
         sl_value = min(sl_pct * premium_scaled, premium_scaled)
 
-        # ----- Phase 1: Animate the first N runs -----
-        st.markdown(f"### Phase 1 — Animating {n_animate} runs")
+        # Phase 1: Animate the first N runs
+        st.markdown(f"### Phase 1 - Animating {n_animate} runs")
         animated_results = []
 
         for run_i in range(1, n_animate + 1):
@@ -334,8 +332,8 @@ with tab_live:
                     rm1, rm2, rm3, rm4 = st.columns(4)
                     rm1.metric("Spot", f"{frame.spot:,.2f}",
                                delta=f"{frame.spot - prev.spot:+,.2f}")
-                    rm2.metric("PnL (₹)", f"₹{frame.pnl:,.2f}",
-                               delta=f"₹{frame.pnl - prev.pnl:+,.2f}")
+                    rm2.metric("PnL (Rs)", f"Rs {frame.pnl:,.2f}",
+                               delta=f"Rs {frame.pnl - prev.pnl:+,.2f}")
                     rm3.metric("Step", f"{frame.step}/{steps}")
                     rm4.metric("Status",
                                final_position.status if j == len(history)-1 else "running")
@@ -355,22 +353,22 @@ with tab_live:
             animated_results.append({
                 "Run #": run_i,
                 "Status": final_position.status,
-                "PnL (₹)": round(final_position.pnl, 2),
+                "PnL (Rs)": round(final_position.pnl, 2),
             })
 
             if final_position.status == "CLOSED_TP":
-                st.success(f"Run {run_i}: **CLOSED_TP** — ₹{final_position.pnl:,.2f}")
+                st.success(f"Run {run_i}: **CLOSED_TP** - Rs {final_position.pnl:,.2f}")
             elif final_position.status == "CLOSED_SL":
-                st.error(f"Run {run_i}: **CLOSED_SL** — ₹{final_position.pnl:,.2f}")
+                st.error(f"Run {run_i}: **CLOSED_SL** - Rs {final_position.pnl:,.2f}")
             else:
-                st.warning(f"Run {run_i}: **{final_position.status}** — ₹{final_position.pnl:,.2f}")
+                st.warning(f"Run {run_i}: **{final_position.status}** - Rs {final_position.pnl:,.2f}")
 
-        # ----- Phase 2: Stream remaining runs into a live-updating table -----
+        # Phase 2: Stream remaining runs into a live-updating table
         remaining = n_total - n_animate
         all_results = list(animated_results)
 
         if remaining > 0:
-            st.markdown(f"### Phase 2 — Streaming {remaining} more runs")
+            st.markdown(f"### Phase 2 - Streaming {remaining} more runs")
 
             stats_ph = st.empty()
             table_ph = st.empty()
@@ -390,10 +388,10 @@ with tab_live:
                 all_results.append({
                     "Run #": run_i,
                     "Status": final_position.status,
-                    "PnL (₹)": round(final_position.pnl, 2),
+                    "PnL (Rs)": round(final_position.pnl, 2),
                 })
 
-                pnls = [r["PnL (₹)"] for r in all_results]
+                pnls = [r["PnL (Rs)"] for r in all_results]
                 statuses = [r["Status"] for r in all_results]
                 wins = sum(1 for s in statuses if s == "CLOSED_TP")
                 losses = sum(1 for s in statuses if s == "CLOSED_SL")
@@ -404,15 +402,15 @@ with tab_live:
                     s1, s2, s3, s4 = st.columns(4)
                     s1.metric("Runs completed", f"{len(all_results)}/{n_total}")
                     s2.metric("Win rate", f"{wins/len(all_results)*100:.1f}%")
-                    s3.metric("Avg PnL", f"₹{avg:,.2f}")
-                    s4.metric("Total PnL", f"₹{sum(pnls):,.2f}")
+                    s3.metric("Avg PnL", f"Rs {avg:,.2f}")
+                    s4.metric("Total PnL", f"Rs {sum(pnls):,.2f}")
 
                     s5, s6, s7, s8 = st.columns(4)
                     s5.metric("TP hits", wins)
                     s6.metric("SL hits", losses)
                     s7.metric("Time exits", timeouts)
                     s8.metric("Best / Worst",
-                              f"₹{max(pnls):,.0f} / ₹{min(pnls):,.0f}")
+                              f"Rs {max(pnls):,.0f} / Rs {min(pnls):,.0f}")
 
                 with table_ph.container():
                     st.dataframe(all_results, use_container_width=True,
@@ -420,10 +418,10 @@ with tab_live:
 
                 time.sleep(0.02)
 
-        # ----- Final summary -----
+        # Final summary
         st.divider()
-        st.subheader(f"Final summary — {n_total} runs")
-        pnls = [r["PnL (₹)"] for r in all_results]
+        st.subheader(f"Final summary - {n_total} runs")
+        pnls = [r["PnL (Rs)"] for r in all_results]
         statuses = [r["Status"] for r in all_results]
         wins = sum(1 for s in statuses if s == "CLOSED_TP")
         losses = sum(1 for s in statuses if s == "CLOSED_SL")
@@ -432,17 +430,17 @@ with tab_live:
 
         f1, f2, f3, f4 = st.columns(4)
         f1.metric("Win rate", f"{wins/n_total*100:.1f}%")
-        f2.metric("Avg PnL", f"₹{avg:,.2f}")
-        f3.metric("Total PnL", f"₹{sum(pnls):,.2f}")
+        f2.metric("Avg PnL", f"Rs {avg:,.2f}")
+        f3.metric("Total PnL", f"Rs {sum(pnls):,.2f}")
         f4.metric("Best / Worst",
-                  f"₹{max(pnls):,.0f} / ₹{min(pnls):,.0f}")
+                  f"Rs {max(pnls):,.0f} / Rs {min(pnls):,.0f}")
 
         f5, f6, f7, f8 = st.columns(4)
         f5.metric("TP hits", wins)
         f6.metric("SL hits", losses)
         f7.metric("Time exits", timeouts)
         std = (sum((p - avg)**2 for p in pnls) / n_total) ** 0.5
-        f8.metric("Std dev", f"₹{std:,.2f}")
+        f8.metric("Std dev", f"Rs {std:,.2f}")
 
         fig = go.Figure(go.Histogram(
             x=pnls, nbinsx=30, marker_color="cyan",
@@ -450,16 +448,16 @@ with tab_live:
         fig.add_vline(x=0, line=dict(color="white", dash="dash"))
         fig.update_layout(
             title="PnL distribution",
-            xaxis_title="PnL (₹)", yaxis_title="Frequency",
+            xaxis_title="PnL (Rs)", yaxis_title="Frequency",
             template="plotly_dark", height=350,
         )
         st.plotly_chart(fig, use_container_width=True)
 
         if avg > 0 and wins / n_total > 0.5:
-            st.success(f"**Positive expectancy.** Avg ₹{avg:,.2f}, "
+            st.success(f"**Positive expectancy.** Avg Rs {avg:,.2f}, "
                        f"win rate {wins/n_total*100:.1f}%.")
         else:
-            st.error(f"**Negative or neutral expectancy.** Avg ₹{avg:,.2f}, "
+            st.error(f"**Negative or neutral expectancy.** Avg Rs {avg:,.2f}, "
                      f"win rate {wins/n_total*100:.1f}%.")
 
 
@@ -482,16 +480,16 @@ with tab_mc:
                 n_runs=n_runs, steps=steps, seed=42,
             )
 
-        st.subheader(f"Results — {n_runs} runs")
+        st.subheader(f"Results - {n_runs} runs")
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Win rate", f"{result.win_rate*100:.1f}%")
-        m2.metric("Average PnL", f"₹{result.avg_pnl:,.2f}")
-        m3.metric("Best", f"₹{result.best_pnl:,.2f}")
-        m4.metric("Worst", f"₹{result.worst_pnl:,.2f}")
+        m2.metric("Average PnL", f"Rs {result.avg_pnl:,.2f}")
+        m3.metric("Best", f"Rs {result.best_pnl:,.2f}")
+        m4.metric("Worst", f"Rs {result.worst_pnl:,.2f}")
 
         m5, m6, m7, m8 = st.columns(4)
-        m5.metric("Median PnL", f"₹{result.median_pnl:,.2f}")
-        m6.metric("Std dev", f"₹{result.std_pnl:,.2f}")
+        m5.metric("Median PnL", f"Rs {result.median_pnl:,.2f}")
+        m6.metric("Std dev", f"Rs {result.std_pnl:,.2f}")
         counts = result.status_counts()
         m7.metric("TP hits", counts.get("CLOSED_TP", 0))
         m8.metric("SL hits", counts.get("CLOSED_SL", 0))
@@ -502,7 +500,7 @@ with tab_mc:
             runs_rows.append({
                 "Run #": i,
                 "Status": status,
-                "PnL (₹)": round(pnl, 2),
+                "PnL (Rs)": round(pnl, 2),
             })
         st.dataframe(runs_rows, use_container_width=True, height=400)
 
@@ -512,15 +510,15 @@ with tab_mc:
         ))
         fig.add_vline(x=0, line=dict(color="white", dash="dash"))
         fig.update_layout(
-            xaxis_title="PnL (₹)", yaxis_title="Frequency",
+            xaxis_title="PnL (Rs)", yaxis_title="Frequency",
             template="plotly_dark", height=350,
         )
         st.plotly_chart(fig, use_container_width=True)
 
         if result.avg_pnl > 0 and result.win_rate > 0.5:
-            st.success(f"**Positive expectancy.** Average PnL ₹{result.avg_pnl:,.2f} "
+            st.success(f"**Positive expectancy.** Average PnL Rs {result.avg_pnl:,.2f} "
                        f"over {n_runs} runs. Strategy has edge.")
         else:
             st.error(f"**Negative or neutral expectancy.** Average PnL "
-                     f"₹{result.avg_pnl:,.2f} over {n_runs} runs. "
+                     f"Rs {result.avg_pnl:,.2f} over {n_runs} runs. "
                      f"Adjust TP/SL or skip this strategy.")
